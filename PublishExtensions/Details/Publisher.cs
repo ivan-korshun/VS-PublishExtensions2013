@@ -296,8 +296,8 @@ namespace PHZH.PublishExtensions.Details
             {
                 status = PublishStatus.Ignored;
 
-                // avoid subitem processing
-                hasSubItems = false;
+                // process nested items if it's a file
+                hasSubItems = item.Kind == Constants.vsProjectItemKindPhysicalFile;
             }
             else if (!relativePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
