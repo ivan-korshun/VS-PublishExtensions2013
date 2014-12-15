@@ -1,0 +1,303 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!--  This is the file that defines the actual layout and type of the commands.
+        It is divided in different sections (e.g. command definition, command
+        placement, ...), with each defining a specific set of properties.
+        See the comment before each section for more details about how to
+        use it. -->
+
+  <!--  The VSCT compiler (the tool that translates this file into the binary 
+        format that VisualStudio will consume) has the ability to run a preprocessor 
+        on the vsct file; this preprocessor is (usually) the C++ preprocessor, so 
+        it is possible to define includes and macros with the same syntax used 
+        in C++ files. Using this ability of the compiler here, we include some files 
+        defining some of the constants that we will use inside the file. -->
+
+  <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
+  <Extern href="stdidcmd.h"/>
+
+  <!--This header contains the command ids for the menus provided by the shell. -->
+  <Extern href="vsshlids.h"/>
+
+
+
+
+  <!--The Commands section is where we the commands, menus and menu groups are defined.
+      This section uses a Guid to identify the package that provides the command defined inside it. -->
+  <Commands package="guidPublishExtensionsPkg">
+    <!-- Inside this section we have different sub-sections: one for the menus, another  
+    for the menu groups, one for the buttons (the actual commands), one for the combos 
+    and the last one for the bitmaps used. Each element is identified by a command id that  
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
+    called "command set" and is used to group different command inside a logically related  
+    group; your package should define its own command set in order to avoid collisions  
+    with command ids defined by other packages. -->
+
+    <Menus>
+
+      <Menu guid="guidPublishCmdSet" id="PublishSubMenu" priority="0x0001" type="Menu">
+        <Parent guid="guidPublishCmdSet" id="PublishMenuGroup" />
+        <Strings>
+          <ButtonText>File Publishing</ButtonText>
+          <CommandName>File Publishing</CommandName>
+        </Strings>
+      </Menu>    
+      
+    </Menus>
+    
+    <!-- In this section you can define new menu groups. A menu group is a container for 
+         other menus or buttons (commands); from a visual point of view you can see the 
+         group as the part of a menu contained between two lines. The parent of a group 
+         must be a menu. -->
+    <Groups>
+
+      <!--<Group guid="guidPublishingExtensionsCmdSet" id="MyMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS"/>
+      </Group>-->
+
+      <Group guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+      </Group>
+
+      <Group guid="guidPublishCmdSet" id="PublishSubMenuGroup" priority="0x0001">
+        <Parent guid="guidPublishCmdSet" id="PublishSubMenu"/>
+      </Group>
+
+      <Group guid="guidPublishCmdSet" id="ConfigureSubMenuGroup" priority="0x0050">
+        <Parent guid="guidPublishCmdSet" id="PublishSubMenu"/>
+      </Group>
+
+      <Group guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_TEXTEDIT"/>
+        <!-- IDM_VS_CTXT_CODEWIN -->
+      </Group>
+
+    </Groups>
+    
+    <!--Buttons section. -->
+    <!--This section defines the elements the user can interact with, like a menu command or a button 
+        or combo box in a toolbar. -->
+    <Buttons>
+      <!--To define a menu group you have to specify its ID, the parent menu and its display priority. 
+          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
+          the CommandFlag node.
+          You can add more than one CommandFlag node e.g.:
+              <CommandFlag>DefaultInvisible</CommandFlag>
+              <CommandFlag>DynamicVisibility</CommandFlag>
+          If you do not want an image next to your command, remove the Icon node /> -->
+
+      <!--<Button guid="guidPublishingExtensionsCmdSet" id="Publish" priority="0x0100" type="Button">
+        <Parent guid="guidPublishingExtensionsCmdSet" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Publish selected files</ButtonText>
+        </Strings>
+      </Button>-->
+      <Button guid="guidPublishCmdSet" id="PublishFiles" priority="0x0100" type="Button">
+        <Parent guid="guidPublishCmdSet" id="PublishSubMenuGroup" />
+        <Icon guid="guidImages" id="bmpPublish" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>PublishFiles</CommandName>
+          <ButtonText>Publish File(s)…</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidPublishCmdSet" id="EditMapping" priority="0x0101" type="Button">
+        <Parent guid="guidPublishCmdSet" id="PublishSubMenuGroup" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>EditMapping</CommandName>
+          <ButtonText>Edit Mapping…</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidPublishCmdSet" id="IncludeFiles" priority="0x0102" type="Button">
+        <Parent guid="guidPublishCmdSet" id="PublishSubMenuGroup" />
+        <Icon guid="guidImages" id="bmpInclude" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>IncludeFiles</CommandName>
+          <ButtonText>Include in Publish</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidPublishCmdSet" id="IgnoreFiles" priority="0x0103" type="Button">
+        <Parent guid="guidPublishCmdSet" id="PublishSubMenuGroup" />
+        <Icon guid="guidImages" id="bmpIgnore" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>IgnoreFiles</CommandName>
+          <ButtonText>Ignore from Publish</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPublishCmdSet" id="ConfigureProject" priority="0x0050" type="Button">
+        <Parent guid="guidPublishCmdSet" id="ConfigureSubMenuGroup" />
+        <Icon guid="guidImages" id="bmpSettings" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>ConfigureProject</CommandName>
+          <ButtonText>Configure Project…</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPublishCmdSet" id="PublishActiveFile" priority="0x0001" type="Button">
+        <Parent guid="guidPublishCmdSet" id="EditorMenuGroup" />
+        <Icon guid="guidImages" id="bmpPublish" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>PublishFile</CommandName>
+          <ButtonText>Publish File…</ButtonText>
+        </Strings>
+      </Button>      
+
+    </Buttons>
+   
+    <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
+    <Bitmaps>
+      <!--  The bitmap id is defined in a way that is a little bit different from the others: 
+            the declaration starts with a guid for the bitmap strip, then there is the resource id of the 
+            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used 
+            inside a button definition. An important aspect of this declaration is that the element id 
+            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
+      <Bitmap guid="guidImages" href="Resources\Images.png" usedList="bmpPublish, bmpSettings, bmpUpload, bmpInclude, bmpIgnore"/>
+
+    </Bitmaps>
+ 
+  </Commands>
+
+  <!-- Menu Constants: http://msdn.microsoft.com/de-de/library/microsoft.visualstudio.shell.vsmenus_fields(v=vs.110).aspx -->
+  <CommandPlacements>
+    
+    <CommandPlacement guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIITEM" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBPROJECT" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBFOLDER" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="PublishMenuGroup" priority="0x0001">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_WEBITEMNODE" />
+    </CommandPlacement>
+    
+    <!-- Editors -->
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_BASIC"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_HTML"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_SCRIPT"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASPX"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASAX"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASPX_CODE"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASAX_CODE"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASPX_CODE_VB"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASAX_CODE_VB"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASMX_CODE"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSet" id="IDMX_HTM_SOURCE_ASMX_CODE_VB"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="htmlEditorCommandSetLibra" id="htmlContextMenuLibra"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="cssEditorCommandSet" id="cssContextMenu"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0100">
+      <Parent guid="cssEditorCommandSet2" id="IDMX_HTM_SOURCE_CSS"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPublishCmdSet" id="EditorMenuGroup" priority="0x0400">
+      <Parent guid="jsEditorCommandSet" id="jsContextMenu"/>
+    </CommandPlacement>
+
+  </CommandPlacements>
+
+  <KeyBindings>
+    <KeyBinding guid="guidPublishCmdSet" id="PublishActiveFile" mod1="Control Shift" key1="P" editor="guidVSStd97"></KeyBinding>
+  </KeyBindings>
+
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidPublishExtensionsPkg" value="{6485d4e2-5904-4a74-ae29-5e264db05ef0}" />
+    
+    <!-- Publish menu items -->
+    <GuidSymbol name="guidPublishCmdSet" value="{19e83d8c-f232-4e97-9725-314c0b7b8750}">
+      <IDSymbol name="PublishMenuGroup" value="0x1020" />
+      <IDSymbol name="PublishSubMenu" value="0x1050" />
+      <IDSymbol name="PublishSubMenuGroup" value="0x1055" />
+      <IDSymbol name="ConfigureSubMenuGroup" value="0x1060" />
+      <IDSymbol name="EditorMenuGroup" value="0x1080" />
+      <IDSymbol name="PublishFiles" value="0x0100" />
+      <IDSymbol name="EditMapping" value="0x0101" />
+      <IDSymbol name="IncludeFiles" value="0x0102" />
+      <IDSymbol name="IgnoreFiles" value="0x0103" />
+      <IDSymbol name="ConfigureProject" value="0x0104" />
+      <IDSymbol name="PublishActiveFile" value="0x0105" />
+    </GuidSymbol>
+
+    <!-- Used for extending other context menus -->
+    <GuidSymbol name="htmlEditorCommandSet" value="{D7E8C5E1-BDB8-11D0-9C88-0000F8040A53}">
+      <IDSymbol name="IDMX_HTM_SOURCE_BASIC" value="0x32" />
+      <IDSymbol name="IDMX_HTM_SOURCE_HTML" value="0x33" />
+      <IDSymbol name="IDMX_HTM_SOURCE_SCRIPT" value="0x34" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASPX" value="0x35" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASAX" value="0x3B" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASPX_CODE" value="0x36" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASAX_CODE" value="0x3C" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASPX_CODE_VB" value="0x37" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASAX_CODE_VB" value="0x3D" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASMX_CODE" value="0x38" />
+      <IDSymbol name="IDMX_HTM_SOURCE_ASMX_CODE_VB" value="0x39" />
+    </GuidSymbol>
+
+    <GuidSymbol name="cssEditorCommandSet" value="{64DA400E-B4AD-4D67-AA92-4B7ACB01ECD5}">
+      <IDSymbol name="cssContextMenu" value="0x0002"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="cssEditorCommandSet2" value="{A764E896-518D-11D2-9A89-00C04F79EFC3}">
+      <IDSymbol name="IDMX_HTM_SOURCE_CSS" value="0x0102"/>
+    </GuidSymbol>
+    
+    <GuidSymbol name="jsEditorCommandSet" value="{D309F791-903F-11D0-9EFC-00A0C911004F}">
+      <IDSymbol name="jsContextMenu" value="0x040d"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="htmlEditorCommandSetLibra" value="{78F03954-2FB8-4087-8CE7-59D71710B3BB}">
+      <IDSymbol name="htmlContextMenuLibra" value="1"/>
+    </GuidSymbol>
+
+    <!-- Icons -->
+    <GuidSymbol name="guidImages" value="{7e0243d1-585a-4a34-8779-c23a613fbbfe}" >
+      <IDSymbol name="bmpPublish" value="1" />
+      <IDSymbol name="bmpSettings" value="2" />
+      <IDSymbol name="bmpUpload" value="3" />
+      <IDSymbol name="bmpInclude" value="4" />
+      <IDSymbol name="bmpIgnore" value="5" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>
