@@ -15,6 +15,7 @@ namespace PHZH.PublishExtensions.Details
     internal class EventDispatcher
     {
         private SolutionEvents solutionEvents = null;
+        private BuildEvents buildEvents = null;
         private DocumentEvents documentEvents = null;
         private ProjectItemsEvents projectItemsEvents = null;
         private ProjectDocumentsEventListener documentListener = null;
@@ -41,6 +42,7 @@ namespace PHZH.PublishExtensions.Details
             // document events
             documentEvents = dte.Events.DocumentEvents;
             documentEvents.DocumentSaved += SettingsStore.DocumentSaved;
+            documentEvents.DocumentSaved += EventStore.DocumentSaved;
 
             Events2 events2 = dte.Events as Events2;
             if (events2 == null)
@@ -49,11 +51,17 @@ namespace PHZH.PublishExtensions.Details
             // project item events
             projectItemsEvents = events2.ProjectItemsEvents;
             projectItemsEvents.ItemRemoved += SettingsStore.ItemRemoved;
+            projectItemsEvents.ItemRemoved += EventStore.ItemRemoved;
+            projectItemsEvents.ItemAdded += EventStore.ItemAdded;
 
             // document listener
             documentListener = new ProjectDocumentsEventListener();
             documentListener.ItemRenamed += SettingsStore.ItemRenamed;
+            documentListener.ItemRenamed += EventStore.ItemRenamed;
             documentListener.StartListening();
+
+            this.buildEvents = events2.BuildEvents;
+            buildEvents.OnBuildProjConfigDone += EventStore.OnBuildProjConfigDone;
         }
 
         /// <summary>
@@ -70,21 +78,31 @@ namespace PHZH.PublishExtensions.Details
 
             if (documentEvents != null)
             {
+                documentEvents.DocumentSaved -= EventStore.DocumentSaved;
                 documentEvents.DocumentSaved -= SettingsStore.DocumentSaved;
                 documentEvents = null;
             }
 
             if (projectItemsEvents != null)
             {
+                projectItemsEvents.ItemRemoved -= EventStore.ItemRemoved;
                 projectItemsEvents.ItemRemoved -= SettingsStore.ItemRemoved;
+                projectItemsEvents.ItemAdded -= EventStore.ItemAdded;
                 projectItemsEvents = null;
             }
 
             if (documentListener != null)
             {
                 documentListener.StopListening();
+                documentListener.ItemRenamed -= EventStore.ItemRenamed;
                 documentListener.ItemRenamed -= SettingsStore.ItemRenamed;
                 documentListener = null;
+            }
+
+            if (buildEvents != null)
+            {
+                buildEvents.OnBuildProjConfigDone -= EventStore.OnBuildProjConfigDone;
+                buildEvents = null;
             }
         }
     }

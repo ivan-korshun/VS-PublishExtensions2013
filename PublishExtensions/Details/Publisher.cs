@@ -21,13 +21,13 @@ namespace PHZH.PublishExtensions.Details
             {
                 Clear();
             }
-            
+
             public override string ToString()
             {
                 return "{0} published, {1} up-to-date, {2} skipped, {3} ignored, {4} failed".TryFormat(
                     AddCount + UpdateCount, UpToDateCount, SkipCount, IgnoreCount, ErrorCount);
             }
-            
+
             public void Clear()
             {
                 AddCount = 0;
@@ -87,7 +87,7 @@ namespace PHZH.PublishExtensions.Details
             public PublishOutput(string publishLocation, Statistics statistics)
             {
                 this.stats = statistics;
-                
+
                 Logger.Log("");
                 Logger.Log("--------- Publish started ({0}) ---------", DateTime.Now.ToString());
                 Logger.Log("=> Publish Location: {0}", publishLocation);
@@ -98,6 +98,8 @@ namespace PHZH.PublishExtensions.Details
                 Logger.Log("========= Publish done: {0} =========", stats.ToString());
             }
         }
+
+        private static readonly object syncRoot = new object();
 
         private ProjectSettings project = null;
         private string publishLocation = null;
@@ -115,7 +117,7 @@ namespace PHZH.PublishExtensions.Details
             try
             {
                 var ac = Directory.GetAccessControl(directory);
-                foreach (System.Security.AccessControl.FileSystemAccessRule rule in 
+                foreach (System.Security.AccessControl.FileSystemAccessRule rule in
                     ac.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount)))
                 {
                     if (rule.AccessControlType == System.Security.AccessControl.AccessControlType.Allow)
@@ -144,7 +146,7 @@ namespace PHZH.PublishExtensions.Details
                     "Invalid publish location",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
-                
+
                 return false;
             }
             catch (Exception ex)
@@ -196,6 +198,16 @@ namespace PHZH.PublishExtensions.Details
             }
         }
 
+        public void Clean(ProjectItem item)
+        {
+            if (item == null)
+                return;
+
+            string path = item.GetRelativePath();
+
+            this.StartPublishTask<string>(this.DoClean, path);
+        }
+
         /// <summary>
         /// Publishes the specified selection.
         /// </summary>
@@ -222,7 +234,7 @@ namespace PHZH.PublishExtensions.Details
             }
 
             // start publishing
-            StartPublish(items);
+            this.StartPublishTask<List<ProjectItem>>(this.DoPublish, items);
         }
 
         /// <summary>
@@ -232,41 +244,59 @@ namespace PHZH.PublishExtensions.Details
         public void Publish(params ProjectItem[] projectItems)
         {
             projectItems.ThrowIfNull("projectItems");
-            
+
             // start publishing
-            StartPublish(projectItems.ToList());
+            this.StartPublishTask<List<ProjectItem>>(this.DoPublish, projectItems.ToList());
         }
 
-        /// <summary>
-        /// Starts the publish of the specified project items.
-        /// </summary>
-        /// <param name="items">The items to publish.</param>
-        private void StartPublish(List<ProjectItem> items)
+        public void Rename(ProjectItem item, string oldFullPath)
         {
-            if (CheckIsPublishing())
-                return;
+            string oldRelativePath = oldFullPath.Replace(item.ContainingProject.GetDirectory(), string.Empty);
 
+            this.StartPublishTask<object>(f => {
+                this.DoClean(oldRelativePath);
+                this.DoPublish(new List<ProjectItem> { item });
+                }, null);
+        }
+
+        private void StartPublishTask<T>(Action<T> action, T arg)
+        {
             if (!CheckAccess(publishLocation))
                 return;
 
-            IsPublishing = true;
-            
             // run in background
             Task.Factory.StartNew(() =>
             {
-                var stats = new Statistics();
-                var processedItems = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
-                using (new PublishOutput(publishLocation, stats))
+                lock (syncRoot)
                 {
-                    // now publish each selected item
-                    foreach (ProjectItem item in items)
+                    IsPublishing = true;
+
+                    try
                     {
-                        // only process project items
-                        if (item != null)
-                            PublishItem(item, processedItems, stats);
+                        action(arg);
+                    }
+                    finally
+                    {
+                        IsPublishing = false;
                     }
                 }
-            }).ContinueWith(task => IsPublishing = false, TaskContinuationOptions.ExecuteSynchronously);          
+            });
+        }
+
+        private void DoPublish(List<ProjectItem> items)
+        {
+            var stats = new Statistics();
+            var processedItems = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
+            using (new PublishOutput(publishLocation, stats))
+            {
+                // now publish each selected item
+                foreach (ProjectItem item in items)
+                {
+                    // only process project items
+                    if (item != null)
+                        PublishItem(item, processedItems, stats);
+                }
+            }
         }
 
         /// <summary>
@@ -279,7 +309,7 @@ namespace PHZH.PublishExtensions.Details
             // item must be a physical file or folder to be published
             if (item.Kind != Constants.vsProjectItemKindPhysicalFile && item.Kind != Constants.vsProjectItemKindPhysicalFolder)
                 return;
-            
+
             bool hasSubItems = item.ProjectItems.Count > 0;
             string relativePath = item.GetRelativePath();
 
@@ -304,7 +334,7 @@ namespace PHZH.PublishExtensions.Details
                 // now that we are going to copy the file, save it first if needed
                 if (item.IsOpen && item.Document != null && !item.Document.Saved)
                     item.Document.Save();
-                
+
                 // for now only files are copied to avoid empty folders
                 CopyFile(item.GetFullPath(), targetPath, out status, out message);
             }
@@ -360,7 +390,7 @@ namespace PHZH.PublishExtensions.Details
                     ignoreFile = true;
                     ignoreReason = "Ignored by filter";
                     return null;
-                }                    
+                }
 
                 // get settings
                 realPath += part;
@@ -449,6 +479,24 @@ namespace PHZH.PublishExtensions.Details
                 copyMessage = ex.ToString();
                 return false;
             }
+        }
+
+        private void DoClean(string path)
+        {
+            string message;
+            bool ignoreFile;
+            string targetPath = publishLocation + GetMappedPath(path, out ignoreFile, out message);
+
+            if (ignoreFile)
+                return;
+
+            if (Directory.Exists(targetPath))
+                Directory.Delete(targetPath, true);
+
+            if (File.Exists(targetPath))
+                File.Delete(targetPath);
+
+            Logger.Log("Clean: {0}", targetPath);
         }
 
         /// <summary>
