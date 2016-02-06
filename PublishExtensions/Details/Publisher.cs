@@ -203,9 +203,10 @@ namespace PHZH.PublishExtensions.Details
             if (item == null)
                 return;
 
-            string path = item.GetRelativePath();
+            List<string> allPaths = new List<string>();
+            this.FillAllPaths(item, allPaths);
 
-            this.StartPublishTask<string>(this.DoClean, path);
+            this.StartPublishTask<IEnumerable<string>>(this.DoClean, allPaths);
         }
 
         /// <summary>
@@ -253,10 +254,16 @@ namespace PHZH.PublishExtensions.Details
         {
             string oldRelativePath = oldFullPath.Replace(item.ContainingProject.GetDirectory(), string.Empty);
 
-            this.StartPublishTask<object>(f => {
-                this.DoClean(oldRelativePath);
+            List<string> allPaths = new List<string>();
+            this.FillAllPaths(item, allPaths);
+
+            string newRelativePath = allPaths.Last();
+
+            this.StartPublishTask<object>(f =>
+            {
+                this.DoClean(allPaths.Select(p => p.Replace(newRelativePath, oldRelativePath)));
                 this.DoPublish(new List<ProjectItem> { item });
-                }, null);
+            }, null);
         }
 
         private void StartPublishTask<T>(Action<T> action, T arg)
@@ -481,22 +488,25 @@ namespace PHZH.PublishExtensions.Details
             }
         }
 
-        private void DoClean(string path)
+        private void DoClean(IEnumerable<string> paths)
         {
-            string message;
-            bool ignoreFile;
-            string targetPath = publishLocation + GetMappedPath(path, out ignoreFile, out message);
+            foreach (string path in paths)
+            {
+                string message;
+                bool ignoreFile;
+                string targetPath = publishLocation + GetMappedPath(path, out ignoreFile, out message);
 
-            if (ignoreFile)
-                return;
+                if (ignoreFile)
+                    continue;
 
-            if (Directory.Exists(targetPath))
-                Directory.Delete(targetPath, true);
+                if (Directory.Exists(targetPath) && !Directory.EnumerateFileSystemEntries(targetPath).Any())
+                    Directory.Delete(targetPath, true);
 
-            if (File.Exists(targetPath))
-                File.Delete(targetPath);
+                if (File.Exists(targetPath))
+                    File.Delete(targetPath);
 
-            Logger.Log("Clean: {0}", targetPath);
+                Logger.Log("Clean: {0}", path);
+            }
         }
 
         /// <summary>
@@ -522,6 +532,16 @@ namespace PHZH.PublishExtensions.Details
             }
 
             return parts;
+        }
+
+        private void FillAllPaths(ProjectItem item, List<string> allPaths)
+        {
+            foreach (ProjectItem child in item.ProjectItems)
+            {
+                this.FillAllPaths(child, allPaths);
+            }
+
+            allPaths.Add(item.GetRelativePath());
         }
     }
 }
