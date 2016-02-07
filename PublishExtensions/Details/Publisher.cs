@@ -102,7 +102,7 @@ namespace PHZH.PublishExtensions.Details
         private static readonly object syncRoot = new object();
 
         private ProjectSettings project = null;
-        private string publishLocation = null;
+        private List<string> publishDirectories = null;
         private Regex excludeRegex = null;
 
         public static bool IsPublishing { get; private set; }
@@ -110,50 +110,11 @@ namespace PHZH.PublishExtensions.Details
         /// <summary>
         /// Determines whether the current user has access to the specified directory and can write to it.
         /// </summary>
-        /// <param name="directory">The directory to check.</param>
+        /// <param name="publishLocation">The publish location.</param>
         /// <returns>true, if the user can write to the specified directory; otherwise, false.</returns>
-        public static bool CheckAccess(string directory)
+        public static bool CheckAccess(string publishLocation)
         {
-            try
-            {
-                var ac = Directory.GetAccessControl(directory);
-                foreach (System.Security.AccessControl.FileSystemAccessRule rule in
-                    ac.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount)))
-                {
-                    if (rule.AccessControlType == System.Security.AccessControl.AccessControlType.Allow)
-                        return true;
-                }
-                return false;
-            }
-            catch (DirectoryNotFoundException)
-            {
-                MessageBoxResult result = MessageBox.Show(
-                    "The specified publish location is not a valid directory." +
-                    Environment.NewLine + Environment.NewLine +
-                    "Location: " + directory,
-                    "Invalid publish location",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                return false;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                MessageBoxResult result = MessageBox.Show(
-                    "You do not have access to the specified publish location. Please make sure you have write access to that directory." +
-                    Environment.NewLine + Environment.NewLine +
-                    "Location: " + directory,
-                    "Invalid publish location",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex, "Error checking access for directory '{0}'", directory);
-                return false;
-            }
+            return CheckDirAccess(GetPublishDirectories(publishLocation));
         }
 
         /// <summary>
@@ -184,7 +145,7 @@ namespace PHZH.PublishExtensions.Details
 
             // set variables
             project = settings;
-            publishLocation = project.GetPublishLocation().EnsureEndingDirectorySeparator();
+            publishDirectories = GetPublishDirectories(project.GetPublishLocation());
 
             // build exclude regex
             HashSet<string> filterParts = project.IgnoreFilter.ToHashSet(';');
@@ -268,7 +229,7 @@ namespace PHZH.PublishExtensions.Details
 
         private void StartPublishTask<T>(Action<T> action, T arg)
         {
-            if (!CheckAccess(publishLocation))
+            if (!CheckDirAccess(publishDirectories))
                 return;
 
             // run in background
@@ -292,16 +253,21 @@ namespace PHZH.PublishExtensions.Details
 
         private void DoPublish(List<ProjectItem> items)
         {
+            this.publishDirectories.ForEach(pd => this.DoPublish(items, pd));
+        }
+
+        private void DoPublish(List<ProjectItem> items, string publishDir)
+        {
             var stats = new Statistics();
             var processedItems = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
-            using (new PublishOutput(publishLocation, stats))
+            using (new PublishOutput(publishDir, stats))
             {
                 // now publish each selected item
                 foreach (ProjectItem item in items)
                 {
                     // only process project items
                     if (item != null)
-                        PublishItem(item, processedItems, stats);
+                        PublishItem(item, publishDir, processedItems, stats);
                 }
             }
         }
@@ -310,8 +276,9 @@ namespace PHZH.PublishExtensions.Details
         /// Publishes the specified item.
         /// </summary>
         /// <param name="item">The item to publish.</param>
+        /// <param name="publishDir">The publish directory.</param>
         /// <param name="level">The level for logging.</param>
-        private void PublishItem(ProjectItem item, HashSet<string> processedItems, Statistics stats)
+        private void PublishItem(ProjectItem item, string publishDir, HashSet<string> processedItems, Statistics stats)
         {
             // item must be a physical file or folder to be published
             if (item.Kind != Constants.vsProjectItemKindPhysicalFile && item.Kind != Constants.vsProjectItemKindPhysicalFolder)
@@ -343,7 +310,7 @@ namespace PHZH.PublishExtensions.Details
                     item.Document.Save();
 
                 // for now only files are copied to avoid empty folders
-                CopyFile(item.GetFullPath(), targetPath, out status, out message);
+                CopyFile(item.GetFullPath(), publishDir + targetPath, out status, out message);
             }
             else
             {
@@ -370,7 +337,7 @@ namespace PHZH.PublishExtensions.Details
             if (hasSubItems)
             {
                 foreach (ProjectItem subItem in item.ProjectItems)
-                    PublishItem(subItem, processedItems, stats);
+                    PublishItem(subItem, publishDir, processedItems, stats);
             }
         }
 
@@ -436,7 +403,6 @@ namespace PHZH.PublishExtensions.Details
         private bool CopyFile(string sourcePath, string targetPath, out PublishStatus status, out string copyMessage)
         {
             copyMessage = null;
-            targetPath = publishLocation + targetPath;
             string targetFolder = targetPath.SubstringBeforeLast(Path.DirectorySeparatorChar.ToString());
 
             // create folder
@@ -490,11 +456,16 @@ namespace PHZH.PublishExtensions.Details
 
         private void DoClean(IEnumerable<string> paths)
         {
+            this.publishDirectories.ForEach(pd => this.DoClean(paths, pd));
+        }
+
+        private void DoClean(IEnumerable<string> paths, string publishDir)
+        {
             foreach (string path in paths)
             {
                 string message;
                 bool ignoreFile;
-                string targetPath = publishLocation + GetMappedPath(path, out ignoreFile, out message);
+                string targetPath = publishDir + GetMappedPath(path, out ignoreFile, out message);
 
                 if (ignoreFile)
                     continue;
@@ -542,6 +513,63 @@ namespace PHZH.PublishExtensions.Details
             }
 
             allPaths.Add(item.GetRelativePath());
+        }
+
+        private static List<string> GetPublishDirectories(string publishLocation)
+        {
+            return publishLocation
+                .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim().EnsureEndingDirectorySeparator())
+                .ToList();
+        }
+
+        public static bool CheckDirAccess(List<string> directories)
+        {
+            return directories.All(CheckDirAccess);
+        }
+
+        private static bool CheckDirAccess(string directory)
+        {
+            try
+            {
+                var ac = Directory.GetAccessControl(directory);
+                foreach (System.Security.AccessControl.FileSystemAccessRule rule in
+                    ac.GetAccessRules(true, true, typeof(System.Security.Principal.NTAccount)))
+                {
+                    if (rule.AccessControlType == System.Security.AccessControl.AccessControlType.Allow)
+                        return true;
+                }
+                return false;
+            }
+            catch (DirectoryNotFoundException)
+            {
+                MessageBoxResult result = MessageBox.Show(
+                    "The specified publish location is not a valid directory." +
+                    Environment.NewLine + Environment.NewLine +
+                    "Location: " + directory,
+                    "Invalid publish location",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                MessageBoxResult result = MessageBox.Show(
+                    "You do not have access to the specified publish location. Please make sure you have write access to that directory." +
+                    Environment.NewLine + Environment.NewLine +
+                    "Location: " + directory,
+                    "Invalid publish location",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex, "Error checking access for directory '{0}'", directory);
+                return false;
+            }
         }
     }
 }

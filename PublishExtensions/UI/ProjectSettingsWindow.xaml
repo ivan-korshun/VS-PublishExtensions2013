@@ -22,7 +22,7 @@
         </Grid.ColumnDefinitions>
         <Label x:Name="lblProjectInfo" Grid.Row="0" Grid.Column="0" Content="Project" Margin="0,0,6,12" Padding="0"/>
         <TextBlock x:Name="lblProject" TextWrapping="Wrap" Grid.Row="0" Text="[Project Name]" Margin="0,0,0,12" Padding="0,0,0,0" Grid.Column="1"/>
-        <Label x:Name="lblPublishFolder" Grid.Row="1" Grid.Column="0" Content="Publish Location" Margin="0,0,6,0" Padding="0,4,0,0" VerticalContentAlignment="Center" VerticalAlignment="Top"/>
+        <Label x:Name="lblPublishFolder" Grid.Row="1" Grid.Column="0" Content="Publish Location(s)" ToolTip="Use comma to specify several locations."  Margin="0,0,6,0" Padding="0,4,0,0" VerticalContentAlignment="Center" VerticalAlignment="Top"/>
         <TextBox x:Name="txbPublishFolder" Grid.Row="1" Text="[Path for Publishing]" Grid.Column="1" Margin="0,0,0,6" />
         <Button x:Name="btnPublishFolderBrowse" Grid.Row="1" Grid.Column="2" Content="Browse…" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="OnPublishFolderBrowse_Click" Margin="1,0,0,6" Padding="10,2,10,2"/>
         <CheckBox x:Name="chkIndividualFolder" Grid.Row="2" Grid.Column="1" IsChecked="False" Margin="0,0,0,12">
