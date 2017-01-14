@@ -11,7 +11,7 @@ namespace PHZH.PublishExtensions.Details
         {
             foreach (Project project in Globals.Solution.Projects)
             {
-                if (!project.FullName.EndsWith(projectName, StringComparison.OrdinalIgnoreCase) || !project.IsSupported())
+                if (!string.Equals(project.UniqueName, projectName, StringComparison.OrdinalIgnoreCase) || !project.IsSupported())
                 {
                     continue;
                 }
