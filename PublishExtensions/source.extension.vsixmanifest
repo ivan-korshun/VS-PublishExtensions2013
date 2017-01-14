@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="6485d4e2-5904-4a74-ae29-5e264db05ef0" Version="2.0.0" Language="en-US" Publisher="PH Zürich, Ivan Korshun" />
+    <Identity Id="6485d4e2-5904-4a74-ae29-5e264db05ef0" Version="2.0.1" Language="en-US" Publisher="PH Zürich, Ivan Korshun" />
     <DisplayName>Publish Extensions</DisplayName>
     <Description xml:space="preserve">Allows publishing of single files to local and network folders.
 Ideal to publish only selected files during development like CSS, JavaScripts, etc. without the need for publishing the whole project.
