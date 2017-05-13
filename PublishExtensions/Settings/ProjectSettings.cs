@@ -26,6 +26,8 @@ namespace PHZH.PublishExtensions.Settings
             IgnoreFilter = DEFAULT_IGNORE_FILTER;
             MappingEnabled = DEFAULT_MAPPING_ENABLED;
             Items = new ItemCollection();
+            Assemblies = string.Empty;
+            AssemblyPublishFolder = string.Empty;
         }
 
         [XmlElement("PublishTarget")]
@@ -39,6 +41,12 @@ namespace PHZH.PublishExtensions.Settings
 
         [XmlElement("Items")]
         public ItemCollection Items { get; set; }
+
+        [XmlElement("Assemblies")]
+        public string Assemblies { get; set; }
+
+        [XmlElement("AssemblyPublishFolder")]
+        public string AssemblyPublishFolder { get; set; }
 
         public void UpdatePublishTarget(bool isUserSpecific, string location)
         {

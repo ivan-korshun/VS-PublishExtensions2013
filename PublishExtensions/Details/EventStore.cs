@@ -19,8 +19,7 @@ namespace PHZH.PublishExtensions.Details
                 ProjectSettings settings = GetSettings(project);
                 if (settings != null)
                 {
-                    var items = project.ProjectItems.Cast<ProjectItem>().Where(i => i.Name == "bin").ToArray();
-                    new Publisher(settings).Publish(items);
+                    new Publisher(settings, projectConfig).Publish();
                 }
 
                 return;

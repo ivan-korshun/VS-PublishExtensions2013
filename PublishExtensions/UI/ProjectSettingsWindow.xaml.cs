@@ -37,6 +37,8 @@ namespace PHZH.PublishExtensions.UI
             chkIndividualFolder.IsChecked = settings.PublishTarget.IsUserSpecific;
             txbIgnoreFilter.Text = settings.IgnoreFilter;
             chkMappingEnabled.IsChecked = settings.MappingEnabled;
+            txbAssemblies.Text = settings.Assemblies;
+            txbAssemblyPublishFolder.Text = settings.AssemblyPublishFolder;
 
             // initialize controls
             txbPublishFolder.Focus();
@@ -66,6 +68,8 @@ namespace PHZH.PublishExtensions.UI
             settings.UpdatePublishTarget(chkIndividualFolder.IsChecked.Value, location);
             settings.IgnoreFilter = txbIgnoreFilter.Text;
             settings.MappingEnabled = chkMappingEnabled.IsChecked.Value;
+            settings.Assemblies = txbAssemblies.Text;
+            settings.AssemblyPublishFolder = txbAssemblyPublishFolder.Text;
 
             // close dialog
             this.DialogResult = true;

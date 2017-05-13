@@ -104,6 +104,7 @@ namespace PHZH.PublishExtensions.Details
         private ProjectSettings project = null;
         private List<string> publishDirectories = null;
         private Regex excludeRegex = null;
+        private string _projectConfig;
 
         public static bool IsPublishing { get; private set; }
 
@@ -157,6 +158,11 @@ namespace PHZH.PublishExtensions.Details
                 filter = filter.TrimEnd('|') + ")$";
                 excludeRegex = new Regex(filter, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             }
+        }
+
+        public Publisher(ProjectSettings settings, string projectConfig) : this(settings)
+        {
+            _projectConfig = projectConfig;
         }
 
         public void Clean(ProjectItem item)
@@ -269,7 +275,41 @@ namespace PHZH.PublishExtensions.Details
                     if (item != null)
                         PublishItem(item, publishDir, processedItems, stats);
                 }
+
+                PublishAssemblies(publishDir, processedItems, stats);
             }
+        }
+
+        private void PublishAssemblies(string publishDir, HashSet<string> processedItems, Statistics stats)
+        {
+            string projectDir = Path.GetDirectoryName(Path.GetDirectoryName(project.FilePath));
+
+            var files = project.Assemblies
+                .Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(a => a.Trim().Replace("$(ConfigurationName)", _projectConfig ?? "$(ConfigurationName)"))
+                .ToList();
+
+            foreach (string sourceFile in files)
+            {
+                string sourceFilePath = Path.Combine(projectDir, sourceFile);
+                string targetFilePath = Path.Combine(publishDir, project.AssemblyPublishFolder, Path.GetFileName(sourceFile));
+                PublishFile(sourceFilePath, targetFilePath, processedItems, stats);
+            }
+        }
+
+        private void PublishFile(string sourceFile, string targetFile, HashSet<string> processedItems, Statistics stats)
+        {
+            if (!File.Exists(sourceFile))
+            {
+                Logger.Log("> NOT FOUND {0}", sourceFile);
+                return;
+            }
+
+            PublishStatus status;
+            string message;
+            CopyFile(sourceFile, targetFile, out status, out message);
+
+            UpdateStatistics(stats, status, sourceFile, message);
         }
 
         /// <summary>
@@ -318,17 +358,7 @@ namespace PHZH.PublishExtensions.Details
                 status = PublishStatus.Folder;
             }
 
-            // log
-            if (!status.IsIn(PublishStatus.Folder, PublishStatus.Unknown, PublishStatus.Unmodified))
-            {
-                if (message != null)
-                    Logger.Log("> {0,-7}  {1} ({2})", status.GetDescription(), relativePath, message);
-                else
-                    Logger.Log("> {0,-7}  {1}", status.GetDescription(), relativePath);
-            }
-
-            // update statistics
-            stats.Update(status);
+            UpdateStatistics(stats, status, relativePath, message);
 
             // add to processed items
             processedItems.Add(relativePath);
@@ -339,6 +369,21 @@ namespace PHZH.PublishExtensions.Details
                 foreach (ProjectItem subItem in item.ProjectItems)
                     PublishItem(subItem, publishDir, processedItems, stats);
             }
+        }
+
+        private void UpdateStatistics(Statistics stats, PublishStatus status, string path, string message)
+        {
+            // log
+            if (!status.IsIn(PublishStatus.Folder, PublishStatus.Unknown, PublishStatus.Unmodified))
+            {
+                if (message != null)
+                    Logger.Log("> {0,-7}  {1} ({2})", status.GetDescription(), path, message);
+                else
+                    Logger.Log("> {0,-7}  {1}", status.GetDescription(), path);
+            }
+
+            // update statistics
+            stats.Update(status);
         }
 
         /// <summary>
