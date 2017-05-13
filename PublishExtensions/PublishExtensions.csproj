@@ -175,6 +175,7 @@
   <ItemGroup>
     <Compile Include="Details\EventDispatcher.cs" />
     <Compile Include="Details\ProjectDocumentsEventListener.cs" />
+    <Compile Include="Details\ProjectRepository.cs" />
     <Compile Include="Details\Publisher.cs" />
     <Compile Include="Details\PublishStatus.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />

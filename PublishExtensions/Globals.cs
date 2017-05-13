@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE80;
+using PHZH.PublishExtensions.Details;
 
 namespace PHZH.PublishExtensions
 {
@@ -132,7 +133,7 @@ namespace PHZH.PublishExtensions
         public static Project FindProject(string projectPath)
         {
             // get the project
-            foreach (Project project in Solution.Projects)
+            foreach (Project project in ProjectRepository.GetProjects())
             {
                 if (project.FullName.EqualsIgnoreCase(projectPath))
                     return project;

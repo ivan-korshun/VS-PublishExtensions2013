@@ -9,7 +9,7 @@ namespace PHZH.PublishExtensions.Details
     {
         public static void OnBuildProjConfigDone(string projectName, string projectConfig, string platform, string solutionConfig, bool success)
         {
-            foreach (Project project in Globals.Solution.Projects)
+            foreach (Project project in ProjectRepository.GetProjects())
             {
                 if (!string.Equals(project.UniqueName, projectName, StringComparison.OrdinalIgnoreCase) || !project.IsSupported())
                 {

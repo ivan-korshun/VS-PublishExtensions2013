@@ -27,7 +27,7 @@ namespace PHZH.PublishExtensions.Settings
 
             if (Globals.Solution != null)
             {
-                foreach (Project project in Globals.Solution.Projects)
+                foreach (Project project in ProjectRepository.GetProjects())
                     UpdateCache(project);
             }
         }
