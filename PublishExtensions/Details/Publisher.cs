@@ -563,7 +563,7 @@ namespace PHZH.PublishExtensions.Details
         private static List<string> GetPublishDirectories(string publishLocation)
         {
             return publishLocation
-                .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim().EnsureEndingDirectorySeparator())
                 .ToList();
         }
